@@ -111,6 +111,11 @@ tr.qc-error:hover { background: #ffe3e3; }
 .badge.tl-action.delete { background: #fbe2e2; color: var(--red); }
 .tl-changes { margin: 4px 0 0; padding-left: 18px; font-size: 13px; color: #3a4150; }
 
+/* Paramétrage */
+.settings-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; max-width: 720px; }
+.settings-card h3 { margin: 0 0 4px; font-size: 15px; }
+.settings-card .toolbar input[type="text"] { min-width: 220px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; }
+
 /* Pivots (dashboards) */
 table.pivot td, table.pivot th { padding: 5px 9px; }
 table.pivot td.editable { cursor: pointer; }

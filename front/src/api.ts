@@ -1,7 +1,7 @@
 import type {
   CapacityCell, CapacityInput, ChangeEntry, LoadGrid, NumberPivot, OccupancyPivot, Overload,
-  PrioritizationPlan, Project, ProjectInput, Referentials, RoadmapItem, Team, TeamInput,
-  TeamLoadDetail,
+  PrioritizationPlan, Project, ProjectInput, ProjectLeader, Referentials, RoadmapItem, Team,
+  TeamInput, TeamLoadDetail,
 } from "./types";
 
 const q = (start?: string) => (start ? `?start=${start}` : "");
@@ -79,6 +79,15 @@ export const api = {
     req<Team>(`/teams/${encodeURIComponent(name)}`, { method: "PUT", body: JSON.stringify(body) }),
   deleteTeam: (name: string) =>
     req<void>(`/teams/${encodeURIComponent(name)}`, { method: "DELETE" }),
+
+  projectLeaders: () => req<ProjectLeader[]>("/project-leaders"),
+  createLeader: (name: string) =>
+    req<ProjectLeader>("/project-leaders", { method: "POST", body: JSON.stringify({ name }) }),
+  updateLeader: (id: number, body: { name?: string; active?: boolean }) =>
+    req<ProjectLeader>(`/project-leaders/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+  deleteLeader: (id: number) => req<void>(`/project-leaders/${id}`, { method: "DELETE" }),
+  importLeadersFromProjects: () =>
+    req<{ added: number; total: number }>("/project-leaders/import-from-projects", { method: "POST" }),
   listProjects: () => req<Project[]>("/projects"),
   getProject: (id: string) => req<Project>(`/projects/${id}`),
   projectHistory: (id: string) => req<ChangeEntry[]>(`/projects/${id}/history`),

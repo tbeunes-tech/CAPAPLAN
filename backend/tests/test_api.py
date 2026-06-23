@@ -217,6 +217,43 @@ def test_team_write_forbidden_for_non_admin(raw_client, engine):
     assert raw_client.post("/teams", headers=h, json={"name": "X"}).status_code == 403
 
 
+def test_project_leaders_crud_and_import(client, engine):
+    from sqlalchemy.orm import sessionmaker
+    from app.models import Project
+    S = sessionmaker(bind=engine, future=True)
+    with S() as s:
+        s.add_all([
+            Project(project_id="2606-0001", project_name="A", project_leader="Alice", in_plan=False),
+            Project(project_id="2606-0002", project_name="B", project_leader="Bob", in_plan=False),
+        ])
+        s.commit()
+    # import depuis les projets : 2 chefs
+    r = client.post("/project-leaders/import-from-projects")
+    assert r.status_code == 200 and r.json()["added"] == 2
+    # ajout manuel + doublon refusé
+    assert client.post("/project-leaders", json={"name": "Carla"}).status_code == 201
+    assert client.post("/project-leaders", json={"name": "Alice"}).status_code == 409
+    leaders = client.get("/project-leaders").json()
+    assert {l["name"] for l in leaders} == {"Alice", "Bob", "Carla"}
+    # renommer + supprimer
+    cid = next(l["id"] for l in leaders if l["name"] == "Carla")
+    assert client.put(f"/project-leaders/{cid}", json={"name": "Carla M."}).json()["name"] == "Carla M."
+    assert client.delete(f"/project-leaders/{cid}").status_code == 204
+
+
+def test_project_leaders_write_forbidden_for_non_admin(raw_client, engine):
+    from sqlalchemy.orm import sessionmaker
+    from app.models import User
+    from app.security import ROLE_CONTRIBUTOR, create_access_token, hash_password
+    S = sessionmaker(bind=engine, future=True)
+    with S() as s:
+        s.add(User(email="c@x", role=ROLE_CONTRIBUTOR, password_hash=hash_password("x")))
+        s.commit()
+    h = {"Authorization": f"Bearer {create_access_token('c@x', ROLE_CONTRIBUTOR)}"}
+    assert raw_client.get("/project-leaders", headers=h).status_code == 200       # lecture OK
+    assert raw_client.post("/project-leaders", headers=h, json={"name": "X"}).status_code == 403
+
+
 def test_dashboards_endpoints_smoke(client):
     for path in ["/dashboards/team-load", "/dashboards/occupancy",
                  "/dashboards/overloads", "/dashboards/roadmap",

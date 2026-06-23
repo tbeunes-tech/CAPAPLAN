@@ -48,6 +48,13 @@ projet par sous-ligne, charge (jours) par mois, lien vers la grille de saisie. L
 = la charge agrégée (= numérateur du taux). NB : encoder le nom d'équipe (`encodeURIComponent`),
 certains contiennent `&`.
 
+### Paramétrage — chefs de projet (Admin)
+Onglet **Paramétrage** (Admin) : référentiel éditable des chefs de projet (table `project_leaders`,
+`GET /project-leaders` lecture, POST/PUT/DELETE Admin, `POST /project-leaders/import-from-projects`
+pour amorcer depuis les valeurs existantes). Dans le formulaire projet, « Chef de projet » est un
+**combobox** (`<datalist>`) alimenté par la liste active — suggère sans bloquer (les valeurs legacy
+texte libre restent valides). 41 chefs amorcés depuis les données.
+
 ### Gestion des équipes (§3.3, Admin)
 Onglet **Équipes** visible aux seuls Admin : table + création/édition/suppression (`TeamsPage`).
 API : `POST /teams`, `PUT /teams/{name}` (nom immuable, FK), `DELETE /teams/{name}` (refus 409 si

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import type { Project, ProjectInput, Referentials } from "../types";
 
@@ -20,6 +20,8 @@ const SELECT_FIELDS: { key: keyof ProjectInput; label: string; refKey: string }[
 
 export default function ProjectForm({ refs, editing, onClose, readOnly = false }: Props) {
   const qc = useQueryClient();
+  const leadersQ = useQuery({ queryKey: ["project-leaders"], queryFn: api.projectLeaders });
+  const leaderOptions = (leadersQ.data ?? []).filter((l) => l.active).map((l) => l.name);
   const [form, setForm] = useState<ProjectInput>(() =>
     editing
       ? { ...editing }
@@ -87,9 +89,14 @@ export default function ProjectForm({ refs, editing, onClose, readOnly = false }
           <div className="field">
             <label>Chef de projet</label>
             <input
+              list="project-leaders-list"
               value={form.project_leader ?? ""}
               onChange={(e) => set("project_leader", e.target.value)}
+              placeholder="Choisir ou saisir…"
             />
+            <datalist id="project-leaders-list">
+              {leaderOptions.map((name) => <option key={name} value={name} />)}
+            </datalist>
           </div>
           <div className="field">
             <label>Programme (texte libre)</label>

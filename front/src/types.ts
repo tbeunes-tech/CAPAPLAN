@@ -44,6 +44,12 @@ export interface TeamInput {
   description: string | null;
 }
 
+export interface ProjectLeader {
+  id: number;
+  name: string;
+  active: boolean;
+}
+
 export interface LoadGrid {
   project_id: string;
   months: string[];

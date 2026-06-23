@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .audit import current_user, register_audit
 from .config import settings
 from .routers import (
-    audit_log, auth, capacity, dashboards, projects, referentials, teams,
+    audit_log, auth, capacity, dashboards, project_leaders, projects, referentials, teams,
 )
 from .security import decode_access_token
 
@@ -48,6 +48,7 @@ async def attach_audit_user(request: Request, call_next):
 app.include_router(auth.router)
 app.include_router(referentials.router)
 app.include_router(teams.router)
+app.include_router(project_leaders.router)
 app.include_router(projects.router)
 app.include_router(capacity.router)
 app.include_router(dashboards.router)

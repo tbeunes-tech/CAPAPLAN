@@ -23,8 +23,10 @@ export default function App() {
 
   if (!email) return <LoginPage />;
 
-  // Onglet Admin (gestion des équipes §3.3) visible aux seuls Admin.
-  const tabs = can("admin") ? [...TABS, { to: "/teams", label: "Équipes" }] : TABS;
+  // Onglets Admin (équipes §3.3 + paramétrage) visibles aux seuls Admin.
+  const tabs = can("admin")
+    ? [...TABS, { to: "/teams", label: "Équipes" }, { to: "/settings", label: "Paramétrage" }]
+    : TABS;
 
   return (
     <div className="app">

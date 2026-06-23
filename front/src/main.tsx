@@ -15,6 +15,7 @@ import RoadmapPage from "./pages/RoadmapPage";
 import PrioritizationPage from "./pages/PrioritizationPage";
 import TeamsPage from "./pages/TeamsPage";
 import HistoryPage from "./pages/HistoryPage";
+import SettingsPage from "./pages/SettingsPage";
 import "./index.css";
 
 const queryClient = new QueryClient({
@@ -37,6 +38,7 @@ const router = createBrowserRouter([
       { path: "roadmap", element: <RoadmapPage /> },
       { path: "prioritization", element: <PrioritizationPage /> },
       { path: "teams", element: <TeamsPage /> },
+      { path: "settings", element: <SettingsPage /> },
     ],
   },
 ]);

@@ -142,3 +142,23 @@ class CapacityUpsert(BaseModel):
     etp_team: float | None = None
     etp_projet: float | None = None
     jours_indispo: float | None = None
+
+
+# --------------------------------------------------------------------------- #
+# Référentiel chefs de projet (Paramétrage)
+# --------------------------------------------------------------------------- #
+class ProjectLeaderOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    name: str
+    active: bool
+
+
+class ProjectLeaderCreate(BaseModel):
+    name: str
+    active: bool = True
+
+
+class ProjectLeaderUpdate(BaseModel):
+    name: str | None = None
+    active: bool | None = None

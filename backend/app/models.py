@@ -44,6 +44,15 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
+class ProjectLeader(Base):
+    """Référentiel éditable des chefs de projet (onglet Paramétrage, Admin)."""
+    __tablename__ = "project_leaders"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+
 class ChangeLog(Base):
     """§8.2 — journal d'audit : une ligne par écriture (qui, quand, quoi, avant → après)."""
     __tablename__ = "change_log"
