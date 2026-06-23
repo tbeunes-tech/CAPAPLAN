@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# DB / dumps locaux
+*.db
+*.sqlite
+backups/
+
+# Env
+.env
+
+# OS
+.DS_Store

@@ -1,0 +1,52 @@
+# Packaging §2 — db + api. Le front (lots ≥3) sera ajouté comme service `front`.
+# Lancement : docker compose up --build
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: portfolio
+      POSTGRES_PASSWORD: portfolio
+      POSTGRES_DB: portfolio
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://portfolio:portfolio@db:5432/portfolio
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      SEED_DEMO: ${SEED_DEMO:-1}        # crée les comptes de démo au boot (mettre 0 en prod)
+    depends_on:
+      db:
+        condition: service_healthy
+    # Au démarrage : migrations, puis (optionnel) comptes de démo, puis serveur.
+    command: >
+      sh -c "alembic upgrade head &&
+             { [ \"$$SEED_DEMO\" = '1' ] && python -m scripts.manage_users seed-demo || true; } &&
+             uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+    volumes:
+      # Monte le classeur source pour pouvoir lancer l'import (§9) une fois la stack levée :
+      #   docker compose exec api python -m scripts.migrate_from_xlsm "/data/PORTFOLIO....xlsm"
+      - ./data:/data:ro
+
+  front:
+    build: ./front
+    environment:
+      API_PROXY_TARGET: http://api:8000   # le front (vite preview) proxifie /api vers l'API
+    depends_on:
+      - api
+    ports:
+      - "5173:5173"
+    # En dev local, préférer `cd front && npm run dev` (HMR).
+
+volumes:
+  pgdata:

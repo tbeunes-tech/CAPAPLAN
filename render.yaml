@@ -1,0 +1,40 @@
+# Blueprint Render — déploiement cloud (Postgres + API + front statique).
+# Render lit ce fichier à la création d'un "Blueprint". Voir DEPLOY-CLOUD.md pour le pas-à-pas.
+databases:
+  - name: portfolio-db
+    databaseName: portfolio
+    user: portfolio
+    plan: free            # Free = base éphémère (~30 j) ; passer à un plan payant pour la durée
+
+services:
+  # --- API FastAPI (Docker) ---
+  - type: web
+    name: portfolio-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free            # Free = veille après inactivité (cold start ~30 s)
+    preDeployCommand: "alembic upgrade head"     # migrations à chaque déploiement
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: portfolio-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true                       # secret fort généré par Render
+      - key: CORS_ORIGINS
+        sync: false                               # à renseigner avec l'URL du front (cf. doc)
+
+  # --- Front React (build statique) ---
+  - type: web
+    name: portfolio-front
+    runtime: static
+    buildCommand: "cd front && npm ci && npm run build"
+    staticPublishPath: ./front/dist
+    envVars:
+      - key: VITE_API_BASE
+        sync: false                               # à renseigner avec l'URL de l'API (cf. doc)
+    routes:
+      - type: rewrite                             # SPA : toutes les routes → index.html
+        source: /*
+        destination: /index.html
