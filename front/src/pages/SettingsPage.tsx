@@ -2,112 +2,131 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import { useAuth } from "../AuthContext";
-import type { ProjectLeader } from "../types";
+import type { Referential } from "../types";
 
 export default function SettingsPage() {
   const qc = useQueryClient();
   const { can } = useAuth();
   const isAdmin = can("admin");
-  const [newName, setNewName] = useState("");
-  const [editing, setEditing] = useState<{ id: number; name: string } | null>(null);
+  const [category, setCategory] = useState<string>("project_leader");
+  const [newValue, setNewValue] = useState("");
+  const [editing, setEditing] = useState<{ id: number; value: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  const q = useQuery({ queryKey: ["project-leaders"], queryFn: api.projectLeaders });
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["project-leaders"] });
+  const catsQ = useQuery({ queryKey: ["ref-categories"], queryFn: api.referentialCategories });
+  const listQ = useQuery({
+    queryKey: ["ref-manage", category],
+    queryFn: () => api.referentialsManage(category),
+  });
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["ref-manage", category] });
+    qc.invalidateQueries({ queryKey: ["referentials"] });       // listes des formulaires
+    qc.invalidateQueries({ queryKey: ["projects"] });           // cascade éventuelle
+  };
 
   const create = useMutation({
-    mutationFn: (name: string) => api.createLeader(name),
-    onSuccess: () => { setNewName(""); setError(null); invalidate(); },
+    mutationFn: (value: string) => api.createReferential(category, value),
+    onSuccess: () => { setNewValue(""); setError(null); invalidate(); },
     onError: (e: Error) => setError(e.message),
   });
   const update = useMutation({
-    mutationFn: (v: { id: number; body: { name?: string; active?: boolean } }) => api.updateLeader(v.id, v.body),
-    onSuccess: () => { setEditing(null); invalidate(); },
+    mutationFn: (v: { id: number; body: { value?: string; active?: boolean } }) => api.updateReferential(v.id, v.body),
+    onSuccess: (r) => {
+      setEditing(null); setError(null);
+      if (r.projects_updated) setNotice(`Renommé — ${r.projects_updated} projet(s) mis à jour automatiquement.`);
+      invalidate();
+    },
     onError: (e: Error) => setError(e.message),
   });
   const del = useMutation({
-    mutationFn: (id: number) => api.deleteLeader(id),
+    mutationFn: (id: number) => api.deleteReferential(id),
     onSuccess: invalidate,
     onError: (e: Error) => alert(e.message),
   });
-  const importer = useMutation({
-    mutationFn: () => api.importLeadersFromProjects(),
-    onSuccess: (r) => { alert(`${r.added} chef(s) ajouté(s) depuis les projets (total ${r.total}).`); invalidate(); },
+  const seed = useMutation({
+    mutationFn: () => api.seedReferentials(),
+    onSuccess: (r) => { setNotice(`${r.added} valeur(s) ajoutée(s) depuis les défauts et les projets.`); invalidate(); },
   });
 
   if (!isAdmin) return <p className="err">Réservé aux administrateurs.</p>;
-  if (q.isLoading) return <p>Chargement…</p>;
-  if (q.isError) return <p className="err">Erreur : {(q.error as Error).message}</p>;
-  const leaders = q.data!;
+
+  const label = catsQ.data?.find((c) => c.key === category)?.label ?? category;
 
   return (
     <div>
-      <h2>Paramétrage</h2>
+      <h2>Paramétrage — référentiels</h2>
+      <p className="muted">
+        Toutes les listes des formulaires sont gérées ici. <strong>Renommer</strong> une valeur la
+        met à jour automatiquement sur tous les projets qui l'utilisent (cascade).
+      </p>
+
+      <div className="toolbar">
+        <label>
+          Liste :{" "}
+          <select value={category} onChange={(e) => { setCategory(e.target.value); setEditing(null); setError(null); }}>
+            {(catsQ.data ?? []).map((c) => (
+              <option key={c.key} value={c.key}>{c.label}</option>
+            ))}
+          </select>
+        </label>
+        <button disabled={seed.isPending} onClick={() => seed.mutate()}
+          title="Ajouter les valeurs par défaut (§4) + celles déjà présentes sur les projets">
+          Réamorcer depuis défauts + projets
+        </button>
+      </div>
 
       <section className="settings-card">
-        <h3>Chefs de projet</h3>
-        <p className="muted">
-          Liste proposée dans le champ « Chef de projet » des projets. Tu peux en ajouter,
-          renommer, désactiver (masqué des suggestions) ou supprimer.
-        </p>
-
+        <h3>{label}</h3>
         <div className="toolbar">
-          <input
-            type="text"
-            placeholder="Nom du chef de projet"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && newName.trim() && create.mutate(newName.trim())}
-          />
-          <button className="primary" disabled={!newName.trim() || create.isPending}
-            onClick={() => create.mutate(newName.trim())}>
-            + Ajouter
-          </button>
-          <button disabled={importer.isPending} onClick={() => importer.mutate()}
-            title="Alimenter la liste à partir des chefs déjà saisis sur les projets">
-            Importer depuis les projets
-          </button>
-          <span className="muted">{leaders.length} chef(s)</span>
+          <input type="text" placeholder={`Nouvelle valeur — ${label}`} value={newValue}
+            onChange={(e) => setNewValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && newValue.trim() && create.mutate(newValue.trim())} />
+          <button className="primary" disabled={!newValue.trim() || create.isPending}
+            onClick={() => create.mutate(newValue.trim())}>+ Ajouter</button>
+          <span className="muted">{listQ.data?.length ?? 0} valeur(s)</span>
         </div>
         {error && <p className="err">⚠ {error}</p>}
+        {notice && <p className="muted">✓ {notice}</p>}
 
-        <div className="table-wrap" style={{ maxHeight: "60vh" }}>
-          <table>
-            <thead>
-              <tr><th>Nom</th><th>Actif</th><th /></tr>
-            </thead>
-            <tbody>
-              {leaders.map((l: ProjectLeader) => (
-                <tr key={l.id}>
-                  <td>
-                    {editing?.id === l.id ? (
-                      <input value={editing.name} autoFocus
-                        onChange={(e) => setEditing({ id: l.id, name: e.target.value })}
-                        onKeyDown={(e) => e.key === "Enter" && update.mutate({ id: l.id, body: { name: editing.name } })} />
-                    ) : l.name}
-                  </td>
-                  <td>
-                    <input type="checkbox" checked={l.active}
-                      onChange={() => update.mutate({ id: l.id, body: { active: !l.active } })} />
-                  </td>
-                  <td>
-                    <span style={{ display: "flex", gap: 6 }}>
-                      {editing?.id === l.id ? (
-                        <>
-                          <button className="primary" onClick={() => update.mutate({ id: l.id, body: { name: editing.name } })}>OK</button>
-                          <button onClick={() => setEditing(null)}>Annuler</button>
-                        </>
-                      ) : (
-                        <button onClick={() => setEditing({ id: l.id, name: l.name })}>Renommer</button>
-                      )}
-                      <button className="danger" onClick={() => { if (confirm(`Supprimer « ${l.name} » ?`)) del.mutate(l.id); }}>✕</button>
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {listQ.isLoading ? <p>Chargement…</p> : (
+          <div className="table-wrap" style={{ maxHeight: "60vh" }}>
+            <table>
+              <thead><tr><th>Valeur</th><th>Active</th><th /></tr></thead>
+              <tbody>
+                {(listQ.data ?? []).map((r: Referential) => (
+                  <tr key={r.id}>
+                    <td>
+                      {editing?.id === r.id ? (
+                        <input value={editing.value} autoFocus style={{ minWidth: 220 }}
+                          onChange={(e) => setEditing({ id: r.id, value: e.target.value })}
+                          onKeyDown={(e) => e.key === "Enter" && update.mutate({ id: r.id, body: { value: editing.value } })} />
+                      ) : r.value}
+                    </td>
+                    <td>
+                      <input type="checkbox" checked={r.active}
+                        onChange={() => update.mutate({ id: r.id, body: { active: !r.active } })} />
+                    </td>
+                    <td>
+                      <span style={{ display: "flex", gap: 6 }}>
+                        {editing?.id === r.id ? (
+                          <>
+                            <button className="primary" onClick={() => update.mutate({ id: r.id, body: { value: editing.value } })}>OK</button>
+                            <button onClick={() => setEditing(null)}>Annuler</button>
+                          </>
+                        ) : (
+                          <button onClick={() => { setNotice(null); setEditing({ id: r.id, value: r.value }); }}>Renommer</button>
+                        )}
+                        <button className="danger" onClick={() => { if (confirm(`Supprimer « ${r.value} » ?`)) del.mutate(r.id); }}>✕</button>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

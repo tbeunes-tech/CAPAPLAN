@@ -1,29 +1,18 @@
 """Schémas Pydantic.
 
-Important : la validation des référentiels §4 s'applique à la **saisie** (create/update),
-**pas** à la restitution. Les données migrées du classeur peuvent contenir des valeurs hors
-référentiel (ex. `programme = 'Modern BI'`) ; on doit pouvoir les **lire** sans les rejeter
-(et un Admin pourra étendre les référentiels au Lot 5).
+Les listes (référentiels) sont gérées en base (table `referentials`, onglet Paramétrage) et
+non plus validées en dur ici : la saisie passe par des listes déroulantes alimentées par la base,
+et les valeurs legacy du classeur restent lisibles/éditables.
 """
 from __future__ import annotations
 
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, field_validator
-
-from . import enums
-
-
-def _check(value: str | None, allowed: list[str], field: str) -> str | None:
-    if value is None:
-        return None
-    if value not in allowed:
-        raise ValueError(f"{field}: valeur '{value}' hors référentiel §4 ({', '.join(allowed)})")
-    return value
+from pydantic import BaseModel, ConfigDict
 
 
 # --------------------------------------------------------------------------- #
-# Champs éditables d'un projet (sans validation — base commune)
+# Champs éditables d'un projet
 # --------------------------------------------------------------------------- #
 class ProjectFields(BaseModel):
     entite: str | None = None
@@ -40,37 +29,11 @@ class ProjectFields(BaseModel):
     end_date: date | None = None
 
 
-class _ReferentialValidators:
-    """Mixin : valide les champs à liste fermée contre le référentiel §4 (saisie uniquement)."""
-
-    @field_validator("entite", check_fields=False)
-    @classmethod
-    def _v_entite(cls, v): return _check(v, enums.ENTITE, "entite")
-
-    @field_validator("domain_lead", check_fields=False)
-    @classmethod
-    def _v_domain(cls, v): return _check(v, enums.DOMAIN_LEAD, "domain_lead")
-
-    @field_validator("status", check_fields=False)
-    @classmethod
-    def _v_status(cls, v): return _check(v, enums.STATUT, "status")
-
-    @field_validator("priorite", check_fields=False)
-    @classmethod
-    def _v_prio(cls, v): return _check(v, enums.PRIORITE, "priorite")
-
-    @field_validator("pilier_strategique", check_fields=False)
-    @classmethod
-    def _v_pilier(cls, v): return _check(v, enums.PILIER_STRATEGIQUE, "pilier_strategique")
-
-    # programme : texte libre (cf. enums.PROGRAMME_IS_FREE_TEXT) — pas de validation fermée.
-
-
-class ProjectCreate(ProjectFields, _ReferentialValidators):
+class ProjectCreate(ProjectFields):
     project_name: str  # obligatoire à la création (§3.1)
 
 
-class ProjectUpdate(ProjectFields, _ReferentialValidators):
+class ProjectUpdate(ProjectFields):
     pass  # patch partiel : tous champs optionnels
 
 
@@ -145,20 +108,22 @@ class CapacityUpsert(BaseModel):
 
 
 # --------------------------------------------------------------------------- #
-# Référentiel chefs de projet (Paramétrage)
+# Référentiels génériques (Paramétrage)
 # --------------------------------------------------------------------------- #
-class ProjectLeaderOut(BaseModel):
+class ReferentialOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: int
-    name: str
+    category: str
+    value: str
     active: bool
 
 
-class ProjectLeaderCreate(BaseModel):
-    name: str
+class ReferentialCreate(BaseModel):
+    category: str
+    value: str
     active: bool = True
 
 
-class ProjectLeaderUpdate(BaseModel):
-    name: str | None = None
+class ReferentialUpdate(BaseModel):
+    value: str | None = None
     active: bool | None = None

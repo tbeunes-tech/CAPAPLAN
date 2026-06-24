@@ -48,12 +48,19 @@ projet par sous-ligne, charge (jours) par mois, lien vers la grille de saisie. L
 = la charge agrégée (= numérateur du taux). NB : encoder le nom d'équipe (`encodeURIComponent`),
 certains contiennent `&`.
 
-### Paramétrage — chefs de projet (Admin)
-Onglet **Paramétrage** (Admin) : référentiel éditable des chefs de projet (table `project_leaders`,
-`GET /project-leaders` lecture, POST/PUT/DELETE Admin, `POST /project-leaders/import-from-projects`
-pour amorcer depuis les valeurs existantes). Dans le formulaire projet, « Chef de projet » est un
-**combobox** (`<datalist>`) alimenté par la liste active — suggère sans bloquer (les valeurs legacy
-texte libre restent valides). 41 chefs amorcés depuis les données.
+### Paramétrage — référentiels génériques (Admin)
+Onglet **Paramétrage** (Admin) : **toutes les listes** sont en base dans **une table unique**
+`referentials(category, value, active)` — catégories = colonnes projet à liste gérée (`entite`,
+`domain_lead`, `status`, `priorite`, `pilier_strategique`, `programme`, `project_leader`).
+Remplace les listes en dur d'`enums.py` (qui ne sert plus que de défauts de seed) et l'ancienne
+table `project_leaders` (migration 0004). Endpoints : `GET /referentials` (valeurs actives par
+catégorie, pour les formulaires), `GET /referentials/manage?category=`, `GET /referentials/categories`,
+POST/PUT/DELETE (Admin), `POST /referentials/seed` (défauts §4 + valeurs présentes sur les projets).
+- **Cascade** : `PUT /referentials/{id}` avec une nouvelle `value` met à jour tous les projets
+  portant l'ancienne valeur (colonne = catégorie), **audité** ; renvoie `projects_updated`.
+- **Suppression** refusée (409) si la valeur est encore utilisée par un projet (désactiver à la place).
+- Plus de validation §4 stricte au niveau du schéma : les formulaires proposent les listes (selects/
+  comboboxes alimentés par `/referentials`), les valeurs legacy restent éditables (`withCurrent`).
 
 ### Gestion des équipes (§3.3, Admin)
 Onglet **Équipes** visible aux seuls Admin : table + création/édition/suppression (`TeamsPage`).

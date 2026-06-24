@@ -1,6 +1,6 @@
 import type {
   CapacityCell, CapacityInput, ChangeEntry, LoadGrid, NumberPivot, OccupancyPivot, Overload,
-  PrioritizationPlan, Project, ProjectInput, ProjectLeader, Referentials, RoadmapItem, Team,
+  PrioritizationPlan, Project, ProjectInput, Referential, Referentials, RoadmapItem, Team,
   TeamInput, TeamLoadDetail,
 } from "./types";
 
@@ -80,14 +80,18 @@ export const api = {
   deleteTeam: (name: string) =>
     req<void>(`/teams/${encodeURIComponent(name)}`, { method: "DELETE" }),
 
-  projectLeaders: () => req<ProjectLeader[]>("/project-leaders"),
-  createLeader: (name: string) =>
-    req<ProjectLeader>("/project-leaders", { method: "POST", body: JSON.stringify({ name }) }),
-  updateLeader: (id: number, body: { name?: string; active?: boolean }) =>
-    req<ProjectLeader>(`/project-leaders/${id}`, { method: "PUT", body: JSON.stringify(body) }),
-  deleteLeader: (id: number) => req<void>(`/project-leaders/${id}`, { method: "DELETE" }),
-  importLeadersFromProjects: () =>
-    req<{ added: number; total: number }>("/project-leaders/import-from-projects", { method: "POST" }),
+  // Référentiels gérés en base (Paramétrage)
+  referentialCategories: () => req<{ key: string; label: string }[]>("/referentials/categories"),
+  referentialsManage: (category: string) =>
+    req<Referential[]>(`/referentials/manage?category=${encodeURIComponent(category)}`),
+  createReferential: (category: string, value: string) =>
+    req<Referential>("/referentials", { method: "POST", body: JSON.stringify({ category, value }) }),
+  updateReferential: (id: number, body: { value?: string; active?: boolean }) =>
+    req<{ projects_updated?: number } & Referential>(`/referentials/${id}`, {
+      method: "PUT", body: JSON.stringify(body),
+    }),
+  deleteReferential: (id: number) => req<void>(`/referentials/${id}`, { method: "DELETE" }),
+  seedReferentials: () => req<{ added: number }>("/referentials/seed", { method: "POST" }),
   listProjects: () => req<Project[]>("/projects"),
   getProject: (id: string) => req<Project>(`/projects/${id}`),
   projectHistory: (id: string) => req<ChangeEntry[]>(`/projects/${id}/history`),

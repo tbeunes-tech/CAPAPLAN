@@ -14,14 +14,17 @@ def _add_team(engine, name="T1"):
 
 
 def test_referentials_endpoint(client):
+    client.post("/referentials/seed")                  # amorce depuis les défauts §4
     r = client.get("/referentials")
     assert r.status_code == 200
     assert "In Progress" in r.json()["status"]
 
 
-def test_project_create_validates_referential(client):
-    r = client.post("/projects", json={"project_name": "X", "status": "BOGUS"})
-    assert r.status_code == 422
+def test_project_create_accepts_value(client):
+    # Les listes sont gérées en base (onglet Paramétrage) et proposées via les listes déroulantes ;
+    # l'API n'impose plus de validation stricte au niveau du schéma.
+    r = client.post("/projects", json={"project_name": "X", "status": "In Progress"})
+    assert r.status_code == 201
 
 
 def test_full_project_lifecycle_and_in_plan(client):
@@ -217,31 +220,43 @@ def test_team_write_forbidden_for_non_admin(raw_client, engine):
     assert raw_client.post("/teams", headers=h, json={"name": "X"}).status_code == 403
 
 
-def test_project_leaders_crud_and_import(client, engine):
+def test_referentials_seed_crud_and_cascade(client, engine):
     from sqlalchemy.orm import sessionmaker
     from app.models import Project
     S = sessionmaker(bind=engine, future=True)
     with S() as s:
         s.add_all([
-            Project(project_id="2606-0001", project_name="A", project_leader="Alice", in_plan=False),
+            Project(project_id="2606-0001", project_name="A", project_leader="Alice",
+                    entite="CPM", in_plan=False),
             Project(project_id="2606-0002", project_name="B", project_leader="Bob", in_plan=False),
         ])
         s.commit()
-    # import depuis les projets : 2 chefs
-    r = client.post("/project-leaders/import-from-projects")
-    assert r.status_code == 200 and r.json()["added"] == 2
-    # ajout manuel + doublon refusé
-    assert client.post("/project-leaders", json={"name": "Carla"}).status_code == 201
-    assert client.post("/project-leaders", json={"name": "Alice"}).status_code == 409
-    leaders = client.get("/project-leaders").json()
-    assert {l["name"] for l in leaders} == {"Alice", "Bob", "Carla"}
-    # renommer + supprimer
-    cid = next(l["id"] for l in leaders if l["name"] == "Carla")
-    assert client.put(f"/project-leaders/{cid}", json={"name": "Carla M."}).json()["name"] == "Carla M."
-    assert client.delete(f"/project-leaders/{cid}").status_code == 204
+
+    # seed : valeurs §4 par défaut + valeurs présentes sur les projets
+    assert client.post("/referentials/seed").status_code == 200
+    refs = client.get("/referentials").json()
+    assert "Alice" in refs["project_leader"] and "Bob" in refs["project_leader"]
+    assert "In Progress" in refs["status"]              # défaut §4
+
+    # ajout + doublon refusé
+    assert client.post("/referentials", json={"category": "project_leader", "value": "Carla"}).status_code == 201
+    assert client.post("/referentials", json={"category": "project_leader", "value": "Alice"}).status_code == 409
+
+    # RENOMMER « Alice » → cascade sur les projets qui l'utilisent
+    leaders = client.get("/referentials/manage?category=project_leader").json()
+    alice_id = next(r["id"] for r in leaders if r["value"] == "Alice")
+    res = client.put(f"/referentials/{alice_id}", json={"value": "Alice Martin"}).json()
+    assert res["projects_updated"] == 1
+    assert client.get("/projects/2606-0001").json()["project_leader"] == "Alice Martin"
+
+    # suppression refusée si utilisée, OK si libre
+    bob_id = next(r["id"] for r in client.get("/referentials/manage?category=project_leader").json() if r["value"] == "Bob")
+    assert client.delete(f"/referentials/{bob_id}").status_code == 409   # Bob est utilisé
+    carla_id = next(r["id"] for r in client.get("/referentials/manage?category=project_leader").json() if r["value"] == "Carla")
+    assert client.delete(f"/referentials/{carla_id}").status_code == 200
 
 
-def test_project_leaders_write_forbidden_for_non_admin(raw_client, engine):
+def test_referentials_write_forbidden_for_non_admin(raw_client, engine):
     from sqlalchemy.orm import sessionmaker
     from app.models import User
     from app.security import ROLE_CONTRIBUTOR, create_access_token, hash_password
@@ -250,8 +265,9 @@ def test_project_leaders_write_forbidden_for_non_admin(raw_client, engine):
         s.add(User(email="c@x", role=ROLE_CONTRIBUTOR, password_hash=hash_password("x")))
         s.commit()
     h = {"Authorization": f"Bearer {create_access_token('c@x', ROLE_CONTRIBUTOR)}"}
-    assert raw_client.get("/project-leaders", headers=h).status_code == 200       # lecture OK
-    assert raw_client.post("/project-leaders", headers=h, json={"name": "X"}).status_code == 403
+    assert raw_client.get("/referentials", headers=h).status_code == 200          # lecture OK
+    assert raw_client.post("/referentials", headers=h,
+                           json={"category": "status", "value": "X"}).status_code == 403
 
 
 def test_dashboards_endpoints_smoke(client):

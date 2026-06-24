@@ -44,12 +44,21 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
 
-class ProjectLeader(Base):
-    """Référentiel éditable des chefs de projet (onglet Paramétrage, Admin)."""
-    __tablename__ = "project_leaders"
+class Referential(Base):
+    """Référentiel générique éditable (onglet Paramétrage, Admin).
+
+    Une ligne = une valeur d'une liste. `category` ∈ les colonnes de projet à liste gérée
+    (entite, domain_lead, status, priorite, pilier_strategique, programme, project_leader).
+    Remplace les listes en dur de `enums.py`. Renommer une valeur se propage aux projets.
+    """
+    __tablename__ = "referentials"
+    __table_args__ = (
+        UniqueConstraint("category", "value", name="uq_referentials_category_value"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    category: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    value: Mapped[str] = mapped_column(String, nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 

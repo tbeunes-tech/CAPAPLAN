@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 import type { Project, ProjectInput, Referentials } from "../types";
 
@@ -8,6 +8,13 @@ interface Props {
   editing: Project | null; // null = création
   onClose: () => void;
   readOnly?: boolean;
+}
+
+// Garantit que la valeur actuelle du projet figure dans les options (cas d'une valeur
+// désactivée dans le référentiel mais encore portée par ce projet legacy).
+function withCurrent(options: string[] | undefined, current: string | null | undefined): string[] {
+  const opts = options ?? [];
+  return current && !opts.includes(current) ? [current, ...opts] : opts;
 }
 
 const SELECT_FIELDS: { key: keyof ProjectInput; label: string; refKey: string }[] = [
@@ -20,8 +27,6 @@ const SELECT_FIELDS: { key: keyof ProjectInput; label: string; refKey: string }[
 
 export default function ProjectForm({ refs, editing, onClose, readOnly = false }: Props) {
   const qc = useQueryClient();
-  const leadersQ = useQuery({ queryKey: ["project-leaders"], queryFn: api.projectLeaders });
-  const leaderOptions = (leadersQ.data ?? []).filter((l) => l.active).map((l) => l.name);
   const [form, setForm] = useState<ProjectInput>(() =>
     editing
       ? { ...editing }
@@ -77,7 +82,7 @@ export default function ProjectForm({ refs, editing, onClose, readOnly = false }
               <label>{label}</label>
               <select value={(form[key] as string) ?? ""} onChange={(e) => set(key, e.target.value)}>
                 <option value="">—</option>
-                {(refs[refKey] ?? []).map((opt) => (
+                {withCurrent(refs[refKey], form[key] as string).map((opt) => (
                   <option key={opt} value={opt}>
                     {opt}
                   </option>
@@ -89,18 +94,26 @@ export default function ProjectForm({ refs, editing, onClose, readOnly = false }
           <div className="field">
             <label>Chef de projet</label>
             <input
-              list="project-leaders-list"
+              list="ref-project_leader"
               value={form.project_leader ?? ""}
               onChange={(e) => set("project_leader", e.target.value)}
               placeholder="Choisir ou saisir…"
             />
-            <datalist id="project-leaders-list">
-              {leaderOptions.map((name) => <option key={name} value={name} />)}
+            <datalist id="ref-project_leader">
+              {(refs.project_leader ?? []).map((name) => <option key={name} value={name} />)}
             </datalist>
           </div>
           <div className="field">
-            <label>Programme (texte libre)</label>
-            <input value={form.programme ?? ""} onChange={(e) => set("programme", e.target.value)} />
+            <label>Programme</label>
+            <input
+              list="ref-programme"
+              value={form.programme ?? ""}
+              onChange={(e) => set("programme", e.target.value)}
+              placeholder="Choisir ou saisir…"
+            />
+            <datalist id="ref-programme">
+              {(refs.programme ?? []).map((p) => <option key={p} value={p} />)}
+            </datalist>
           </div>
           <div className="field">
             <label>Budget item</label>

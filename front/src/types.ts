@@ -44,9 +44,10 @@ export interface TeamInput {
   description: string | null;
 }
 
-export interface ProjectLeader {
+export interface Referential {
   id: number;
-  name: string;
+  category: string;
+  value: string;
   active: boolean;
 }
 

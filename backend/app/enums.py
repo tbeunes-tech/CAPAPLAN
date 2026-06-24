@@ -42,3 +42,33 @@ REFERENTIALS = {
     "status": STATUT,
     "programme": PROGRAMME,
 }
+
+# Catégories gérées en base (table `referentials`). La clé de catégorie == nom de la colonne
+# de `projects` correspondante → renommer une valeur peut se propager (cascade) à cette colonne.
+REFERENTIAL_CATEGORIES = [
+    "entite", "domain_lead", "status", "priorite", "pilier_strategique",
+    "programme", "project_leader",
+]
+
+# Valeurs par défaut servant à amorcer la table (§4). project_leader n'a pas de défaut
+# (alimenté depuis les données). Programme : la liste §4 + valeurs réelles importées.
+REFERENTIAL_DEFAULTS = {
+    "entite": ENTITE,
+    "domain_lead": DOMAIN_LEAD,
+    "status": STATUT,
+    "priorite": PRIORITE,
+    "pilier_strategique": PILIER_STRATEGIQUE,
+    "programme": PROGRAMME,
+    "project_leader": [],
+}
+
+# Libellés d'affichage des catégories (UI Paramétrage).
+CATEGORY_LABELS = {
+    "entite": "Entité",
+    "domain_lead": "Domain lead",
+    "status": "Statut",
+    "priorite": "Priorité",
+    "pilier_strategique": "Pilier stratégique",
+    "programme": "Programme",
+    "project_leader": "Chef de projet",
+}
