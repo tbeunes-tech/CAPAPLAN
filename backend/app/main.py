@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .audit import current_user, register_audit
 from .config import settings
 from .routers import (
-    audit_log, auth, capacity, dashboards, projects, referentials, teams,
+    admin_init, audit_log, auth, capacity, dashboards, projects, referentials, teams,
 )
 from .security import decode_access_token
 
@@ -52,6 +52,7 @@ app.include_router(projects.router)
 app.include_router(capacity.router)
 app.include_router(dashboards.router)
 app.include_router(audit_log.router)
+app.include_router(admin_init.router)
 
 
 @app.get("/health")
