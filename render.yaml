@@ -24,6 +24,14 @@ services:
         generateValue: true                       # secret fort généré par Render
       - key: CORS_ORIGINS
         sync: false                               # à renseigner avec l'URL du front (cf. doc)
+      - key: AUTO_INIT
+        value: "1"                                # charge les données au 1er démarrage (idempotent)
+      - key: ADMIN_EMAIL
+        value: t.beunes@gmail.com                 # compte admin créé au démarrage
+      - key: ADMIN_PASSWORD
+        sync: false                               # mot de passe admin (saisi dans Render au déploiement)
+      - key: INIT_TOKEN
+        generateValue: true
 
   # --- Front React (build statique) ---
   - type: web

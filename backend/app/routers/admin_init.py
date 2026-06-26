@@ -42,13 +42,8 @@ def _coerce(row: dict) -> dict:
     return out
 
 
-@router.post("/init")
-def init_db(x_init_token: str | None = Header(default=None), db: Session = Depends(get_db)):
-    """Crée le schéma, charge le seed anonymisé et l'admin (depuis l'environnement)."""
-    expected = os.environ.get("INIT_TOKEN")
-    if not expected or x_init_token != expected:
-        raise HTTPException(403, "jeton d'initialisation invalide")
-
+def run_seed(db: Session) -> dict:
+    """Crée le schéma, charge le seed et l'admin (depuis l'environnement). Idempotent."""
     Base.metadata.create_all(engine)  # crée les tables si absentes
 
     already = db.scalar(select(func.count()).select_from(Project))
@@ -85,3 +80,12 @@ def init_db(x_init_token: str | None = Header(default=None), db: Session = Depen
         "projects": db.scalar(select(func.count()).select_from(Project)),
         "monthly_loads": db.scalar(select(func.count()).select_from(MonthlyLoad)),
     }
+
+
+@router.post("/init")
+def init_db(x_init_token: str | None = Header(default=None), db: Session = Depends(get_db)):
+    """Endpoint manuel d'initialisation, protégé par jeton."""
+    expected = os.environ.get("INIT_TOKEN")
+    if not expected or x_init_token != expected:
+        raise HTTPException(403, "jeton d'initialisation invalide")
+    return run_seed(db)

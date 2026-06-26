@@ -55,6 +55,26 @@ app.include_router(audit_log.router)
 app.include_router(admin_init.router)
 
 
+@app.on_event("startup")
+def _auto_init() -> None:
+    """Chargement automatique au démarrage (cloud) : si AUTO_INIT=1, peuple la base (idempotent).
+    Permet un déploiement Render « one-click » sans appel manuel à /admin/init."""
+    import os
+
+    if os.environ.get("AUTO_INIT") != "1":
+        return
+    from .database import SessionLocal
+    from .routers.admin_init import run_seed
+
+    db = SessionLocal()
+    try:
+        run_seed(db)
+    except Exception as exc:  # noqa: BLE001 — on ne bloque pas le démarrage si déjà initialisé
+        print(f"[auto-init] ignoré : {exc}")
+    finally:
+        db.close()
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "lot": 5, "database_url_scheme": settings.database_url.split(":", 1)[0]}
