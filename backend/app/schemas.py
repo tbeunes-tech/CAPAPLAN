@@ -25,6 +25,7 @@ class ProjectFields(BaseModel):
     budget_item: str | None = None
     budget_owner: str | None = None
     programme: str | None = None
+    prio_dsi: str | None = None
     start_date: date | None = None
     end_date: date | None = None
 

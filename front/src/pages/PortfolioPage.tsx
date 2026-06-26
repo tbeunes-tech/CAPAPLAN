@@ -59,17 +59,9 @@ export default function PortfolioPage() {
       { accessorKey: "project_leader", header: "Chef de projet" },
       { accessorKey: "status", header: "Statut" },
       { accessorKey: "priorite", header: "Prio" },
+      { accessorKey: "prio_dsi", header: "Prio DSI" },
       { accessorKey: "pilier_strategique", header: "Pilier" },
       { accessorKey: "programme", header: "Programme" },
-      {
-        accessorKey: "in_plan",
-        header: "In Plan",
-        cell: ({ getValue }) => (
-          <span className={"badge " + (getValue() ? "in-plan" : "off-plan")}>
-            {getValue() ? "oui" : "non"}
-          </span>
-        ),
-      },
       { accessorKey: "start_date", header: "Début" },
       { accessorKey: "end_date", header: "Fin" },
       {
@@ -146,11 +138,11 @@ export default function PortfolioPage() {
         <ExportButton
           name="portefeuille-projets"
           headers={["ID", "Entité", "Projet", "Domain lead", "Chef de projet", "Statut",
-                    "Priorité", "Pilier", "Programme", "In Plan", "Début", "Fin",
+                    "Priorité", "Prio DSI", "Pilier", "Programme", "Début", "Fin",
                     "Charge (j)", "Erreurs QC"]}
           rows={rows.map(({ original: p }) => [
             p.project_id, p.entite, p.project_name, p.domain_lead, p.project_leader, p.status,
-            p.priorite, p.pilier_strategique, p.programme, p.in_plan ? "oui" : "non",
+            p.priorite, p.prio_dsi, p.pilier_strategique, p.programme,
             p.start_date, p.end_date, p.total_project_load ?? 0, qcSummary(p),
           ])}
         />

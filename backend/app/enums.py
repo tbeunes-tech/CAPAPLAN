@@ -47,7 +47,7 @@ REFERENTIALS = {
 # de `projects` correspondante → renommer une valeur peut se propager (cascade) à cette colonne.
 REFERENTIAL_CATEGORIES = [
     "entite", "domain_lead", "status", "priorite", "pilier_strategique",
-    "programme", "project_leader",
+    "programme", "project_leader", "prio_dsi",
 ]
 
 # Valeurs par défaut servant à amorcer la table (§4). project_leader n'a pas de défaut
@@ -60,6 +60,7 @@ REFERENTIAL_DEFAULTS = {
     "pilier_strategique": PILIER_STRATEGIQUE,
     "programme": PROGRAMME,
     "project_leader": [],
+    "prio_dsi": [],          # liste définie par l'Admin dans Paramétrage
 }
 
 # Libellés d'affichage des catégories (UI Paramétrage).
@@ -71,4 +72,5 @@ CATEGORY_LABELS = {
     "pilier_strategique": "Pilier stratégique",
     "programme": "Programme",
     "project_leader": "Chef de projet",
+    "prio_dsi": "Prio DSI",
 }

@@ -24,7 +24,7 @@ TABLES = {
     "projects": (Project, [
         "project_id", "entite", "domain_lead", "project_name", "project_leader", "status",
         "priorite", "pilier_strategique", "budget_item", "budget_owner", "programme",
-        "in_plan", "start_date", "end_date", "last_update", "total_project_load",
+        "prio_dsi", "in_plan", "start_date", "end_date", "last_update", "total_project_load",
     ]),
     "monthly_loads": (MonthlyLoad, ["project_id", "team", "month", "days", "in_plan", "updated_at"]),
     "monthly_capacity": (MonthlyCapacity, [

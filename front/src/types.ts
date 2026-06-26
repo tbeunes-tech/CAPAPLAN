@@ -18,6 +18,7 @@ export interface Project {
   budget_item: string | null;
   budget_owner: string | null;
   programme: string | null;
+  prio_dsi: string | null;
   in_plan: boolean;
   start_date: string | null;
   end_date: string | null;

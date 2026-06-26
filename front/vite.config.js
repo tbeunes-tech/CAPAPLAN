@@ -15,6 +15,8 @@ var proxy = {
 };
 export default defineConfig({
     plugins: [react()],
-    server: { port: 5173, proxy: proxy },
-    preview: { port: 5173, host: true, proxy: proxy },
+    // allowedHosts: true → autorise l'accès via le domaine du tunnel Cloudflare
+    // (*.trycloudflare.com) en plus de localhost / IP LAN. Acceptable pour un partage de démo.
+    server: { port: 5173, host: true, proxy: proxy, allowedHosts: true },
+    preview: { port: 5173, host: true, proxy: proxy, allowedHosts: true },
 });

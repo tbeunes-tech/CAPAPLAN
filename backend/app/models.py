@@ -94,6 +94,7 @@ class Project(Base):
     budget_item: Mapped[str | None] = mapped_column(String)
     budget_owner: Mapped[str | None] = mapped_column(String)
     programme: Mapped[str | None] = mapped_column(String)
+    prio_dsi: Mapped[str | None] = mapped_column(String)  # liste gérée (Paramétrage)
 
     # Calculés (§6.2 / §6.6) — jamais saisis.
     in_plan: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

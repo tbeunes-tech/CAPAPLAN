@@ -22,6 +22,7 @@ const SELECT_FIELDS: { key: keyof ProjectInput; label: string; refKey: string }[
   { key: "domain_lead", label: "Domain lead", refKey: "domain_lead" },
   { key: "status", label: "Statut", refKey: "status" },
   { key: "priorite", label: "Priorité", refKey: "priorite" },
+  { key: "prio_dsi", label: "Prio DSI", refKey: "prio_dsi" },
   { key: "pilier_strategique", label: "Pilier stratégique", refKey: "pilier_strategique" },
 ];
 
@@ -61,11 +62,8 @@ export default function ProjectForm({ refs, editing, onClose, readOnly = false }
         {readOnly && <div className="banner info">Lecture seule — votre rôle (Lecteur) n'autorise pas la modification.</div>}
         {editing && (
           <p className="muted">
-            ID {editing.project_id} ·{" "}
-            <span className={"badge " + (editing.in_plan ? "in-plan" : "off-plan")}>
-              {editing.in_plan ? "In Plan" : "Hors plan"}
-            </span>{" "}
-            (calculé) · dernière maj {editing.last_update?.slice(0, 16).replace("T", " ") ?? "—"}
+            ID {editing.project_id} · dernière maj{" "}
+            {editing.last_update?.slice(0, 16).replace("T", " ") ?? "—"}
           </p>
         )}
         <div className="form-grid">
