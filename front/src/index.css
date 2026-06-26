@@ -60,6 +60,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 table { border-collapse: collapse; width: 100%; background: var(--panel); font-size: 13px; }
 th, td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
 th { cursor: pointer; user-select: none; position: sticky; top: 0; background: #fafbfc; z-index: 1; }
+.col-filter { display: block; width: 100%; margin-top: 4px; padding: 3px 6px; font-size: 11px; font-weight: 400; border: 1px solid var(--border); border-radius: 5px; }
 tbody tr:hover { background: #f0f4ff; }
 tr.qc-error { background: var(--error-bg); }
 tr.qc-error:hover { background: #ffe3e3; }
