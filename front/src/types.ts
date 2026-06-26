@@ -107,6 +107,8 @@ export interface RoadmapItem {
   project_id: string;
   project_name: string;
   pilier_strategique: string | null;
+  priorite: string | null;
+  prio_dsi: string | null;
   start_date: string | null;
   end_date: string | null;
 }

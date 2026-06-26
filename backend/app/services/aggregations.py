@@ -168,6 +168,8 @@ def roadmap(db: Session) -> list[dict]:
             "project_id": p.project_id,
             "project_name": p.project_name,
             "pilier_strategique": p.pilier_strategique,
+            "priorite": p.priorite,
+            "prio_dsi": p.prio_dsi,
             "start_date": p.start_date,
             "end_date": p.end_date,
         }
