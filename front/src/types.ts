@@ -75,10 +75,17 @@ export interface NumberPivot {
   rows: { team: string; values: number[] }[];
 }
 
+export interface ProjectBrief {
+  project_id: string;
+  project_name: string;
+  priorite: string | null;
+  prio_dsi: string | null;
+}
+
 export interface TeamLoadDetail {
   team: string;
   months: string[];
-  rows: { project_id: string; project_name: string; values: number[] }[];
+  rows: (ProjectBrief & { values: number[] })[];
 }
 
 export interface OccupancyPivot {
@@ -116,6 +123,7 @@ export interface Scenario {
   scenario: string;
   project_count: number;
   project_ids: string[];
+  projects: (ProjectBrief & { charge: number })[];
   charge_cumulee: number;
   global_rate: number;
   global_color: ColorName;

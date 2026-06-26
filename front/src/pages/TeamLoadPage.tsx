@@ -37,6 +37,8 @@ function TeamDetail({ team, start, months }: { team: string; start: string; mont
         <tr className="detail-row" key={r.project_id}>
           <td className="sticky-col detail-label" title={r.project_name}>
             <Link to={`/portfolio/${r.project_id}/loads`}>{r.project_id}</Link> · {r.project_name}
+            {r.priorite && <span className="chip">{r.priorite}</span>}
+            {r.prio_dsi && <span className="chip chip-dsi">{r.prio_dsi}</span>}
           </td>
           {r.values.map((v, i) => (
             <td key={i} style={{ textAlign: "right" }}>{fmt(v)}</td>

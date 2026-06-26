@@ -51,22 +51,25 @@ def team_load_detail(db: Session, team: str, start: date | None = None) -> dict:
     months = month_window(start or first_of_month(_today()))
     mset = set(months)
     rows = db.execute(
-        select(MonthlyLoad.project_id, Project.project_name, MonthlyLoad.month,
-               func.sum(MonthlyLoad.days))
+        select(MonthlyLoad.project_id, Project.project_name, Project.priorite, Project.prio_dsi,
+               MonthlyLoad.month, func.sum(MonthlyLoad.days))
         .join(Project, Project.project_id == MonthlyLoad.project_id)
         .where(MonthlyLoad.team == team, MonthlyLoad.in_plan.is_(True),
                MonthlyLoad.month.in_(months))
-        .group_by(MonthlyLoad.project_id, Project.project_name, MonthlyLoad.month)
+        .group_by(MonthlyLoad.project_id, Project.project_name, Project.priorite,
+                  Project.prio_dsi, MonthlyLoad.month)
     ).all()
     acc: dict[str, dict] = {}
-    for pid, pname, month, total in rows:
+    for pid, pname, prio, prio_dsi, month, total in rows:
         if month not in mset:
             continue
         entry = acc.setdefault(pid, {"project_id": pid, "project_name": pname,
+                                     "priorite": prio, "prio_dsi": prio_dsi,
                                      "vals": {m: 0.0 for m in months}})
         entry["vals"][month] = round_tenth(float(total or 0))
     out = [
         {"project_id": e["project_id"], "project_name": e["project_name"],
+         "priorite": e["priorite"], "prio_dsi": e["prio_dsi"],
          "values": [e["vals"][m] for m in months]}
         for e in acc.values()
     ]
@@ -201,6 +204,12 @@ def prioritization_plan(db: Session, start: date | None = None) -> dict:
     in_plan_projects = db.scalars(select(Project).where(Project.in_plan.is_(True))).all()
     by_scenario = _scenario_project_ids(in_plan_projects)
     total_load = {p.project_id: float(p.total_project_load or 0) for p in in_plan_projects}
+    details = {
+        p.project_id: {"project_id": p.project_id, "project_name": p.project_name,
+                       "priorite": p.priorite, "prio_dsi": p.prio_dsi,
+                       "charge": round_tenth(float(p.total_project_load or 0))}
+        for p in in_plan_projects
+    }
 
     # Charge mensuelle par projet (in_plan), sur la fenêtre.
     load_rows = db.execute(
@@ -245,6 +254,10 @@ def prioritization_plan(db: Session, start: date | None = None) -> dict:
             "scenario": label,
             "project_count": len(pids),
             "project_ids": pids,
+            "projects": sorted(
+                (details[p] for p in pids if p in details),
+                key=lambda d: (d["priorite"] or "~", d["project_id"]),
+            ),
             "charge_cumulee": round_tenth(sum(total_load.get(p, 0.0) for p in pids)),
             "global_rate": global_rate,
             "global_color": occupancy_color(global_rate),

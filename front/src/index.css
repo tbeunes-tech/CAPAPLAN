@@ -130,7 +130,17 @@ table.pivot td.editable:hover { background: #eef4ff; outline: 1px solid var(--ac
 .chevron:hover { color: var(--accent); }
 tr.team-row.open .sticky-col { font-weight: 600; }
 tr.detail-row td { background: #f8fafc; font-size: 12px; color: #4a5160; padding: 3px 9px; }
-tr.detail-row .detail-label { padding-left: 26px; max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+tr.detail-row .detail-label { padding-left: 26px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Chips Prio / Prio DSI */
+.chip { display: inline-block; margin-left: 6px; padding: 0 7px; border-radius: 10px; font-size: 10px;
+  background: #eef0f3; color: #4a5160; vertical-align: middle; }
+.chip-dsi { background: #e7eefe; color: var(--accent); }
+
+/* Sous-tableau (détail priorisation) */
+.sub-table { width: auto; min-width: 480px; background: transparent; font-size: 12px; }
+.sub-table th, .sub-table td { padding: 3px 10px; border-bottom: 1px solid #eef0f3; white-space: nowrap; }
+.sub-table th { position: static; background: transparent; cursor: default; font-weight: 600; }
 table.pivot tfoot td { border-top: 2px solid var(--border); background: #fafbfc; }
 .pivot .sticky-col, .table-wrap .sticky-col { position: sticky; left: 0; background: var(--panel); z-index: 2; }
 
